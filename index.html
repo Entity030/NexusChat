@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus — Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-void: #0d0f14;
+    --bg-sidebar: #12151c;
+    --bg-channel: #161b25;
+    --bg-main: #1a1f2e;
+    --bg-input: #0f1219;
+    --bg-hover: rgba(108, 99, 255, 0.08);
+    --bg-active: rgba(108, 99, 255, 0.18);
+    --bg-message: rgba(255,255,255,0.03);
+    --accent: #6c63ff;
+    --accent-dim: #4a43b3;
+    --accent-glow: rgba(108, 99, 255, 0.25);
+    --text-primary: #e8e9f0;
+    --text-secondary: #8b90a7;
+    --text-muted: #4a4f65;
+    --border: rgba(255,255,255,0.07);
+    --border-accent: rgba(108,99,255,0.4);
+    --danger: #e85555;
+    --success: #4ade80;
+    --warning: #f59e0b;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --font: 'Sora', system-ui, sans-serif;
+    --transition: 0.15s ease;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-void);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
+
+  /* ══════════════════════════════════════
+     AUTH SCREEN
+  ══════════════════════════════════════ */
+  #auth-screen {
+    position: fixed; inset: 0;
+    background: var(--bg-void);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .auth-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px 44px;
+    width: 420px;
+    max-width: 95vw;
+  }
+
+  .auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .auth-logo-mark {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+
+  .auth-logo-name {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .auth-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    letter-spacing: -0.4px;
+  }
+
+  .auth-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+  }
+
+  .auth-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+  }
+
+  .auth-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color var(--transition);
+  }
+
+  .auth-input:focus {
+    border-color: var(--accent);
+  }
+
+  .auth-input.error {
+    border-color: var(--danger);
+  }
+
+  .auth-error {
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: -12px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .auth-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 11px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition), transform 0.1s;
+  }
+
+  .auth-btn:hover { background: #7a72ff; }
+  .auth-btn:active { transform: scale(0.98); }
+
+  .auth-switch {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .auth-switch a {
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .auth-switch a:hover { text-decoration: underline; }
+
+  /* ══════════════════════════════════════
+     MAIN APP LAYOUT
+  ══════════════════════════════════════ */
+  #app {
+    display: none;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #app.visible { display: flex; }
+
+  /* Left rail: DMs / Navigation */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 16px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-app-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    margin-bottom: 12px;
+  }
+
+  .sidebar-logo-mark {
+    width: 26px; height: 26px;
+    background: var(--accent);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .sidebar-search {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    transition: border-color var(--transition);
+  }
+
+  .sidebar-search:focus { border-color: var(--accent); }
+  .sidebar-search::placeholder { color: var(--text-muted); }
+
+  .sidebar-section {
+    padding: 12px 8px 0;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 0 8px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-section-label button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color var(--transition);
+  }
+
+  .sidebar-section-label button:hover { color: var(--text-primary); }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition);
+    margin-bottom: 2px;
+    position: relative;
+  }
+
+  .nav-item:hover { background: var(--bg-hover); }
+  .nav-item.active { background: var(--bg-active); }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 60%;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .nav-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .nav-avatar .status-dot {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--success);
+    border: 2px solid var(--bg-sidebar);
+  }
+
+  .nav-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-channel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .nav-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  .nav-item.active .nav-label,
+  .nav-item:hover .nav-label { color: var(--text-primary); }
+
+  .badge {
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 1px 5px;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  /* User footer */
+  .sidebar-footer {
+    border-top: 1px solid var(--border);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .footer-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .footer-avatar .status-dot {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--success);
+    border: 2px solid var(--bg-sidebar);
+  }
+
+  .footer-info { flex: 1; min-width: 0; }
+  .footer-name { font-size: 13px; font-weight: 500; }
+  .footer-status { font-size: 11px; color: var(--text-muted); }
+
+  .footer-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: color var(--transition), background var(--transition);
+  }
+
+  .footer-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+
+  /* ══════════════════════════════════════
+     MAIN CONTENT AREA
+  ══════════════════════════════════════ */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-main);
+  }
+
+  .main-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .main-header-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .main-header-icon {
+    font-size: 20px;
+    color: var(--text-secondary);
+  }
+
+  .main-header-name {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.2px;
+  }
+
+  .main-header-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .main-header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+
+  .header-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: var(--font);
+    font-weight: 400;
+    transition: background var(--transition), color var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .header-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+  .header-btn.danger:hover { background: rgba(232,85,85,0.1); color: var(--danger); }
+
+  /* Messages */
+  .messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .msg-group { margin-bottom: 14px; }
+
+  .msg-row {
+    display: flex;
+    gap: 12px;
+    padding: 3px 6px;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition);
+  }
+
+  .msg-row:hover { background: var(--bg-message); }
+
+  .msg-avatar-col { width: 36px; flex-shrink: 0; }
+
+  .msg-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-top: 2px;
+  }
+
+  .msg-avatar-spacer { width: 36px; }
+
+  .msg-content { flex: 1; min-width: 0; }
+
+  .msg-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+
+  .msg-author {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .msg-time {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .msg-text {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .msg-continued { padding-left: 4px; }
+
+  /* Timestamp divider */
+  .time-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .time-divider::before, .time-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Chat input */
+  .input-area {
+    padding: 0 20px 20px;
+    flex-shrink: 0;
+  }
+
+  .input-wrap {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    transition: border-color var(--transition);
+  }
+
+  .input-wrap:focus-within { border-color: var(--border-accent); }
+
+  .chat-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 13px 0;
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 14px;
+    resize: none;
+    line-height: 1.4;
+  }
+
+  .chat-input::placeholder { color: var(--text-muted); }
+
+  .send-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition);
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { background: #7a72ff; }
+  .send-btn:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+  /* ══════════════════════════════════════
+     FRIENDS / REQUESTS PANEL
+  ══════════════════════════════════════ */
+  .panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+
+  .panel-title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    margin-bottom: 4px;
+  }
+
+  .panel-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .panel-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+  }
+
+  .friend-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 6px;
+    transition: border-color var(--transition);
+  }
+
+  .friend-card:hover { border-color: var(--border-accent); }
+
+  .friend-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .friend-avatar .status-dot {
+    position: absolute;
+    bottom: 1px; right: 1px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--success);
+    border: 2px solid var(--bg-sidebar);
+  }
+
+  .friend-info { flex: 1; min-width: 0; }
+
+  .friend-name {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .friend-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .friend-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .action-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+
+  .action-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--accent); }
+
+  .action-btn.accept { border-color: var(--success); color: var(--success); }
+  .action-btn.accept:hover { background: rgba(74,222,128,0.1); }
+
+  .action-btn.decline { border-color: var(--danger); color: var(--danger); }
+  .action-btn.decline:hover { background: rgba(232,85,85,0.1); }
+
+  .action-btn.msg { border-color: var(--accent); color: var(--accent); }
+  .action-btn.msg:hover { background: var(--accent-glow); }
+
+  /* Add friend */
+  .add-friend-box {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .add-friend-box p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  .add-friend-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .add-friend-input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 13px;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .add-friend-input:focus { border-color: var(--accent); }
+  .add-friend-input::placeholder { color: var(--text-muted); }
+
+  .add-friend-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 9px 16px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--transition);
+  }
+
+  .add-friend-btn:hover { background: #7a72ff; }
+
+  .add-friend-status {
+    font-size: 12px;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  .status-ok { color: var(--success); }
+  .status-err { color: var(--danger); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--text-muted);
+  }
+
+  .empty-state-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
+
+  /* Welcome panel for DMs */
+  .dm-welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 40px;
+    text-align: center;
+    gap: 10px;
+    color: var(--text-muted);
+  }
+
+  .dm-welcome-icon {
+    font-size: 48px;
+    opacity: 0.2;
+    margin-bottom: 6px;
+  }
+
+  .dm-welcome h2 {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .dm-welcome p {
+    font-size: 13px;
+    max-width: 280px;
+  }
+
+  /* Notification toast */
+  .toast-area {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 888;
+  }
+
+  .toast {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-size: 13px;
+    max-width: 280px;
+    border-left: 3px solid var(--accent);
+    animation: toastIn 0.2s ease;
+  }
+
+  .toast.success { border-left-color: var(--success); }
+  .toast.error { border-left-color: var(--danger); }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Tabs in main header for friends page */
+  .tab-row {
+    display: flex;
+    gap: 2px;
+  }
+
+  .tab {
+    background: none;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .tab:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .tab.active { background: var(--bg-active); color: var(--text-primary); font-weight: 500; }
+
+  /* ── online pill ── */
+  .online-pill {
+    font-size: 10px;
+    color: var(--success);
+    background: rgba(74,222,128,0.1);
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-weight: 500;
+  }
+
+  /* context-color avatars */
+  .av-purple { background: #6c63ff; }
+  .av-teal { background: #0f9e7b; }
+  .av-coral { background: #d85a30; }
+  .av-pink { background: #c45380; }
+  .av-amber { background: #ba7517; }
+  .av-blue { background: #2775c8; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card" id="login-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">Nx</div>
+      <span class="auth-logo-name">Nexus</span>
+    </div>
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-subtitle">Sign in to continue chatting</div>
+    <div class="auth-label">Username</div>
+    <input class="auth-input" id="login-username" type="text" placeholder="Enter your username" autocomplete="off">
+    <div class="auth-error" id="login-error">Username not found. Try signing up.</div>
+    <div class="auth-label">Password</div>
+    <input class="auth-input" id="login-password" type="password" placeholder="Enter your password">
+    <div class="auth-error" id="login-pw-error">Incorrect password.</div>
+    <button class="auth-btn" id="login-btn">Sign in</button>
+    <div class="auth-switch">
+      No account? <a id="go-register">Create one</a>
+    </div>
+  </div>
+
+  <div class="auth-card" id="register-card" style="display:none;">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">Nx</div>
+      <span class="auth-logo-name">Nexus</span>
+    </div>
+    <div class="auth-title">Create your account</div>
+    <div class="auth-subtitle">Choose a unique username to get started</div>
+    <div class="auth-label">Username</div>
+    <input class="auth-input" id="reg-username" type="text" placeholder="e.g. coolgamer99" autocomplete="off">
+    <div class="auth-error" id="reg-username-error">Username already taken.</div>
+    <div class="auth-label">Password</div>
+    <input class="auth-input" id="reg-password" type="password" placeholder="Create a password">
+    <div class="auth-error" id="reg-pw-error">Password must be at least 4 characters.</div>
+    <div class="auth-label">Confirm Password</div>
+    <input class="auth-input" id="reg-confirm" type="password" placeholder="Repeat your password">
+    <div class="auth-error" id="reg-confirm-error">Passwords do not match.</div>
+    <button class="auth-btn" id="register-btn">Create account</button>
+    <div class="auth-switch">
+      Already have an account? <a id="go-login">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     MAIN APP
+══════════════════════════════════ -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-app-name">
+        <div class="sidebar-logo-mark">Nx</div>
+        Nexus
+      </div>
+      <input class="sidebar-search" id="dm-search" placeholder="Find a conversation…" type="text">
+    </div>
+
+    <div class="sidebar-section">
+      <!-- Friends nav -->
+      <div class="sidebar-section-label">
+        Navigation
+      </div>
+      <div class="nav-item" id="nav-friends" onclick="showPage('friends')">
+        <div class="nav-icon">👥</div>
+        <span class="nav-label">Friends</span>
+        <span class="badge" id="req-badge" style="display:none"></span>
+      </div>
+
+      <!-- DMs -->
+      <div class="sidebar-section-label" style="margin-top:14px;">
+        Direct Messages
+        <button title="New DM" onclick="showPage('friends')" style="font-size:18px;color:var(--text-muted)">+</button>
+      </div>
+      <div id="dm-list">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="footer-avatar" id="footer-av">
+        <div class="status-dot"></div>
+      </div>
+      <div class="footer-info">
+        <div class="footer-name" id="footer-name">–</div>
+        <div class="footer-status">Online</div>
+      </div>
+      <button class="footer-btn" title="Sign out" onclick="logout()">⎋</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main" id="main-content">
+
+    <!-- Friends Page -->
+    <div id="page-friends" style="display:none; flex-direction:column; height:100%;">
+      <div class="main-header">
+        <span style="font-size:20px;">👥</span>
+        <div>
+          <div class="main-header-name">Friends</div>
+        </div>
+        <div class="main-header-actions">
+          <div class="tab-row">
+            <button class="tab active" onclick="switchFriendTab('all',this)">All</button>
+            <button class="tab" onclick="switchFriendTab('pending',this)" id="pending-tab">Pending</button>
+          </div>
+          <button class="header-btn" onclick="switchFriendTab('add',null)" style="background:var(--accent);color:#fff;margin-left:6px;">+ Add Friend</button>
+        </div>
+      </div>
+      <div class="panel" id="friends-panel"></div>
+    </div>
+
+    <!-- DM Page -->
+    <div id="page-dm" style="display:none; flex-direction:column; height:100%;">
+      <div class="main-header" id="dm-header">
+        <div class="main-header-avatar" id="dm-header-av"></div>
+        <div>
+          <div class="main-header-name" id="dm-header-name"></div>
+          <div class="main-header-sub" id="dm-header-sub">Online</div>
+        </div>
+        <div class="main-header-actions">
+          <button class="header-btn danger" onclick="removeFriend()" id="remove-friend-btn">Remove Friend</button>
+        </div>
+      </div>
+      <div class="messages-container" id="dm-messages"></div>
+      <div class="input-area">
+        <div class="input-wrap">
+          <input class="chat-input" id="dm-input" placeholder="Message…" type="text">
+          <button class="send-btn" id="dm-send">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Default welcome -->
+    <div id="page-welcome" class="dm-welcome">
+      <div class="dm-welcome-icon">💬</div>
+      <h2>Welcome to Nexus</h2>
+      <p>Add friends and send direct messages to start chatting.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-area" id="toast-area"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   DATA LAYER  (localStorage-backed)
+═══════════════════════════════════════════════════════ */
+
+function getData(key, def) {
+  try { return JSON.parse(localStorage.getItem('nexus_' + key)) ?? def; }
+  catch { return def; }
+}
+
+function setData(key, val) {
+  localStorage.setItem('nexus_' + key, JSON.stringify(val));
+}
+
+/* ── Users: { username: { passwordHash, color } } ── */
+function getUsers() { return getData('users', {}); }
+function saveUsers(u) { setData('users', u); }
+
+function simpleHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h.toString(36);
+}
+
+/* ── Friend requests: [{ from, to, ts }] ── */
+function getRequests() { return getData('requests', []); }
+function saveRequests(r) { setData('requests', r); }
+
+/* ── Friends: { user: [username,...] } ── */
+function getFriends() { return getData('friends', {}); }
+function saveFriends(f) { setData('friends', f); }
+
+function getFriendList(user) {
+  return getFriends()[user] || [];
+}
+
+function areFriends(a, b) {
+  return getFriendList(a).includes(b);
+}
+
+function addFriendship(a, b) {
+  const f = getFriends();
+  f[a] = [...new Set([...(f[a] || []), b])];
+  f[b] = [...new Set([...(f[b] || []), a])];
+  saveFriends(f);
+}
+
+function removeFriendship(a, b) {
+  const f = getFriends();
+  f[a] = (f[a] || []).filter(x => x !== b);
+  f[b] = (f[b] || []).filter(x => x !== a);
+  saveFriends(f);
+}
+
+/* ── DM Messages: { key: [{from,text,ts}] } ── */
+function dmKey(a, b) { return [a, b].sort().join('__'); }
+function getMessages(a, b) { return getData('msgs_' + dmKey(a, b), []); }
+function saveMessages(a, b, msgs) { setData('msgs_' + dmKey(a, b), msgs); }
+
+/* ── Avatar colors ── */
+const COLORS = ['av-purple','av-teal','av-coral','av-pink','av-amber','av-blue'];
+function avatarColor(name) {
+  let h = 0;
+  for (let c of name) h = ((h << 5) - h + c.charCodeAt(0)) | 0;
+  return COLORS[Math.abs(h) % COLORS.length];
+}
+function initials(name) { return name.slice(0,2).toUpperCase(); }
+
+/* ═══════════════════════════════════════════════════════
+   SESSION STATE
+═══════════════════════════════════════════════════════ */
+let currentUser = null;
+let currentDmPartner = null;
+let currentFriendTab = 'all';
+
+function getSession() { return sessionStorage.getItem('nexus_session'); }
+function setSession(u) { sessionStorage.setItem('nexus_session', u); }
+function clearSession() { sessionStorage.removeItem('nexus_session'); }
+
+/* ═══════════════════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════════════════ */
+document.getElementById('go-register').addEventListener('click', () => {
+  document.getElementById('login-card').style.display = 'none';
+  document.getElementById('register-card').style.display = '';
+});
+document.getElementById('go-login').addEventListener('click', () => {
+  document.getElementById('register-card').style.display = 'none';
+  document.getElementById('login-card').style.display = '';
+});
+
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+document.getElementById('register-btn').addEventListener('click', doRegister);
+document.getElementById('reg-confirm').addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+
+function doLogin() {
+  const username = document.getElementById('login-username').value.trim().toLowerCase();
+  const password = document.getElementById('login-password').value;
+  const users = getUsers();
+  const uErr = document.getElementById('login-error');
+  const pwErr = document.getElementById('login-pw-error');
+
+  uErr.style.display = 'none';
+  pwErr.style.display = 'none';
+  document.getElementById('login-username').classList.remove('error');
+  document.getElementById('login-password').classList.remove('error');
+
+  if (!users[username]) {
+    uErr.style.display = '';
+    document.getElementById('login-username').classList.add('error');
+    return;
+  }
+  if (users[username].passwordHash !== simpleHash(password)) {
+    pwErr.style.display = '';
+    document.getElementById('login-password').classList.add('error');
+    return;
+  }
+  loginAs(username);
+}
+
+function doRegister() {
+  const username = document.getElementById('reg-username').value.trim().toLowerCase();
+  const password = document.getElementById('reg-password').value;
+  const confirm = document.getElementById('reg-confirm').value;
+  const users = getUsers();
+
+  const uErr = document.getElementById('reg-username-error');
+  const pwErr = document.getElementById('reg-pw-error');
+  const cErr = document.getElementById('reg-confirm-error');
+  [uErr, pwErr, cErr].forEach(e => e.style.display = 'none');
+  document.getElementById('reg-username').classList.remove('error');
+  document.getElementById('reg-password').classList.remove('error');
+  document.getElementById('reg-confirm').classList.remove('error');
+
+  let ok = true;
+
+  if (!username || username.length < 2 || !/^[a-z0-9_]+$/.test(username)) {
+    uErr.textContent = 'Use 2+ letters, numbers, or underscores.';
+    uErr.style.display = '';
+    document.getElementById('reg-username').classList.add('error');
+    ok = false;
+  } else if (users[username]) {
+    uErr.textContent = 'Username already taken.';
+    uErr.style.display = '';
+    document.getElementById('reg-username').classList.add('error');
+    ok = false;
+  }
+
+  if (password.length < 4) {
+    pwErr.style.display = '';
+    document.getElementById('reg-password').classList.add('error');
+    ok = false;
+  }
+
+  if (password !== confirm) {
+    cErr.style.display = '';
+    document.getElementById('reg-confirm').classList.add('error');
+    ok = false;
+  }
+
+  if (!ok) return;
+
+  users[username] = { passwordHash: simpleHash(password) };
+  saveUsers(users);
+  loginAs(username);
+}
+
+function loginAs(username) {
+  currentUser = username;
+  setSession(username);
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  initApp();
+}
+
+function logout() {
+  clearSession();
+  currentUser = null;
+  currentDmPartner = null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('auth-screen').style.display = '';
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+}
+
+/* ═══════════════════════════════════════════════════════
+   APP INIT
+═══════════════════════════════════════════════════════ */
+function initApp() {
+  const av = document.getElementById('footer-av');
+  av.innerHTML = initials(currentUser) + '<div class="status-dot"></div>';
+  av.className = 'footer-avatar ' + avatarColor(currentUser);
+  document.getElementById('footer-name').textContent = currentUser;
+  renderDmList();
+  updateReqBadge();
+  showPage('welcome');
+}
+
+/* ═══════════════════════════════════════════════════════
+   PAGE ROUTING
+═══════════════════════════════════════════════════════ */
+function showPage(page, partner) {
+  document.getElementById('page-friends').style.display = 'none';
+  document.getElementById('page-dm').style.display = 'none';
+  document.getElementById('page-welcome').style.display = 'none';
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  if (page === 'friends') {
+    document.getElementById('page-friends').style.display = 'flex';
+    document.getElementById('nav-friends').classList.add('active');
+    renderFriendsPanel();
+  } else if (page === 'dm' && partner) {
+    document.getElementById('page-dm').style.display = 'flex';
+    currentDmPartner = partner;
+    openDm(partner);
+  } else {
+    document.getElementById('page-welcome').style.display = 'flex';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   DM SIDEBAR LIST
+═══════════════════════════════════════════════════════ */
+function renderDmList(filter) {
+  const list = document.getElementById('dm-list');
+  const friends = getFriendList(currentUser);
+  list.innerHTML = '';
+
+  const q = (filter || '').toLowerCase();
+  const filtered = friends.filter(f => !q || f.includes(q));
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 10px;">No conversations yet</div>';
+    return;
+  }
+
+  filtered.forEach(friend => {
+    const msgs = getMessages(currentUser, friend);
+    const last = msgs[msgs.length - 1];
+    const div = document.createElement('div');
+    div.className = 'nav-item' + (currentDmPartner === friend ? ' active' : '');
+    div.onclick = () => showPage('dm', friend);
+    div.innerHTML = `
+      <div class="nav-avatar ${avatarColor(friend)}">${initials(friend)}<div class="status-dot"></div></div>
+      <div style="min-width:0;flex:1;">
+        <div class="nav-label" style="font-size:13px;font-weight:500;color:var(--text-primary)">${friend}</div>
+        ${last ? `<div class="nav-label" style="font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${last.from === currentUser ? 'You: ' : ''}${last.text}</div>` : ''}
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+document.getElementById('dm-search').addEventListener('input', e => {
+  renderDmList(e.target.value);
+});
+
+/* ═══════════════════════════════════════════════════════
+   FRIENDS PANEL
+═══════════════════════════════════════════════════════ */
+function switchFriendTab(tab, btn) {
+  currentFriendTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderFriendsPanel();
+}
+
+function renderFriendsPanel() {
+  const panel = document.getElementById('friends-panel');
+  panel.innerHTML = '';
+
+  if (currentFriendTab === 'add') {
+    renderAddFriend(panel);
+    return;
+  }
+
+  if (currentFriendTab === 'pending') {
+    renderPending(panel);
+    return;
+  }
+
+  // All friends
+  const friends = getFriendList(currentUser);
+  if (friends.length === 0) {
+    panel.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">👻</div>
+        <p>No friends yet. Use the Add Friend button to get started.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const label = document.createElement('div');
+  label.className = 'panel-section-label';
+  label.textContent = `All Friends — ${friends.length}`;
+  panel.appendChild(label);
+
+  friends.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'friend-card';
+    card.innerHTML = `
+      <div class="friend-avatar ${avatarColor(f)}">${initials(f)}<div class="status-dot"></div></div>
+      <div class="friend-info">
+        <div class="friend-name">${f}</div>
+        <div class="friend-sub"><span class="online-pill">● Online</span></div>
+      </div>
+      <div class="friend-actions">
+        <button class="action-btn msg" onclick="showPage('dm','${f}')">Message</button>
+        <button class="action-btn decline" onclick="confirmRemoveFriend('${f}')">Remove</button>
+      </div>
+    `;
+    panel.appendChild(card);
+  });
+}
+
+function renderPending(panel) {
+  const reqs = getRequests();
+  const incoming = reqs.filter(r => r.to === currentUser);
+  const outgoing = reqs.filter(r => r.from === currentUser);
+
+  if (incoming.length === 0 && outgoing.length === 0) {
+    panel.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><p>No pending requests.</p></div>`;
+    return;
+  }
+
+  if (incoming.length > 0) {
+    const label = document.createElement('div');
+    label.className = 'panel-section-label';
+    label.textContent = `Incoming — ${incoming.length}`;
+    panel.appendChild(label);
+
+    incoming.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'friend-card';
+      card.innerHTML = `
+        <div class="friend-avatar ${avatarColor(r.from)}">${initials(r.from)}</div>
+        <div class="friend-info">
+          <div class="friend-name">${r.from}</div>
+          <div class="friend-sub" style="color:var(--warning);">Incoming friend request</div>
+        </div>
+        <div class="friend-actions">
+          <button class="action-btn accept" onclick="acceptRequest('${r.from}')">Accept</button>
+          <button class="action-btn decline" onclick="declineRequest('${r.from}')">Decline</button>
+        </div>
+      `;
+      panel.appendChild(card);
+    });
+  }
+
+  if (outgoing.length > 0) {
+    const label2 = document.createElement('div');
+    label2.className = 'panel-section-label';
+    label2.style.marginTop = '20px';
+    label2.textContent = `Sent — ${outgoing.length}`;
+    panel.appendChild(label2);
+
+    outgoing.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'friend-card';
+      card.innerHTML = `
+        <div class="friend-avatar ${avatarColor(r.to)}">${initials(r.to)}</div>
+        <div class="friend-info">
+          <div class="friend-name">${r.to}</div>
+          <div class="friend-sub" style="color:var(--text-muted);">Request pending…</div>
+        </div>
+        <div class="friend-actions">
+          <button class="action-btn decline" onclick="cancelRequest('${r.to}')">Cancel</button>
+        </div>
+      `;
+      panel.appendChild(card);
+    });
+  }
+}
+
+function renderAddFriend(panel) {
+  panel.innerHTML = `
+    <div class="panel-title">Add a Friend</div>
+    <div class="panel-sub">Send a friend request by username. They'll need to accept before you can message each other.</div>
+    <div class="add-friend-box">
+      <p>Enter an exact username to send a request.</p>
+      <div class="add-friend-row">
+        <input class="add-friend-input" id="af-input" placeholder="Username" type="text" autocomplete="off">
+        <button class="add-friend-btn" onclick="sendFriendRequest()">Send Request</button>
+      </div>
+      <div class="add-friend-status" id="af-status"></div>
+    </div>
+  `;
+  document.getElementById('af-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendFriendRequest();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   FRIEND LOGIC
+═══════════════════════════════════════════════════════ */
+function sendFriendRequest() {
+  const target = document.getElementById('af-input').value.trim().toLowerCase();
+  const status = document.getElementById('af-status');
+  status.className = 'add-friend-status';
+
+  if (!target) { status.textContent = ''; return; }
+  if (target === currentUser) {
+    status.className += ' status-err';
+    status.textContent = "You can't add yourself.";
+    return;
+  }
+
+  const users = getUsers();
+  if (!users[target]) {
+    status.className += ' status-err';
+    status.textContent = 'No user with that username exists.';
+    return;
+  }
+
+  if (areFriends(currentUser, target)) {
+    status.className += ' status-err';
+    status.textContent = 'You are already friends.';
+    return;
+  }
+
+  const reqs = getRequests();
+  if (reqs.find(r => r.from === currentUser && r.to === target)) {
+    status.className += ' status-err';
+    status.textContent = 'Request already sent.';
+    return;
+  }
+
+  if (reqs.find(r => r.from === target && r.to === currentUser)) {
+    acceptRequest(target);
+    status.className += ' status-ok';
+    status.textContent = `You're now friends with ${target}!`;
+    document.getElementById('af-input').value = '';
+    return;
+  }
+
+  reqs.push({ from: currentUser, to: target, ts: Date.now() });
+  saveRequests(reqs);
+
+  status.className += ' status-ok';
+  status.textContent = `Friend request sent to ${target}!`;
+  document.getElementById('af-input').value = '';
+  updateReqBadge();
+}
+
+function acceptRequest(fromUser) {
+  const reqs = getRequests().filter(r => !(r.from === fromUser && r.to === currentUser));
+  saveRequests(reqs);
+  addFriendship(currentUser, fromUser);
+  renderDmList();
+  updateReqBadge();
+  renderFriendsPanel();
+  toast(`You and ${fromUser} are now friends! 🎉`, 'success');
+}
+
+function declineRequest(fromUser) {
+  const reqs = getRequests().filter(r => !(r.from === fromUser && r.to === currentUser));
+  saveRequests(reqs);
+  updateReqBadge();
+  renderFriendsPanel();
+  toast(`Declined request from ${fromUser}.`);
+}
+
+function cancelRequest(toUser) {
+  const reqs = getRequests().filter(r => !(r.from === currentUser && r.to === toUser));
+  saveRequests(reqs);
+  renderFriendsPanel();
+  toast('Request cancelled.');
+}
+
+function confirmRemoveFriend(friend) {
+  if (!confirm(`Remove ${friend} as a friend? You will lose your DM history.`)) return;
+  removeFriendship(currentUser, friend);
+  setData('msgs_' + dmKey(currentUser, friend), []);
+  if (currentDmPartner === friend) {
+    currentDmPartner = null;
+    showPage('welcome');
+  }
+  renderDmList();
+  renderFriendsPanel();
+  toast(`${friend} removed from friends.`);
+}
+
+function removeFriend() {
+  if (currentDmPartner) confirmRemoveFriend(currentDmPartner);
+}
+
+function updateReqBadge() {
+  const reqs = getRequests().filter(r => r.to === currentUser);
+  const badge = document.getElementById('req-badge');
+  const tab = document.getElementById('pending-tab');
+  if (reqs.length > 0) {
+    badge.textContent = reqs.length;
+    badge.style.display = '';
+    tab.textContent = `Pending (${reqs.length})`;
+  } else {
+    badge.style.display = 'none';
+    tab.textContent = 'Pending';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   DM VIEW
+═══════════════════════════════════════════════════════ */
+function openDm(partner) {
+  const headerAv = document.getElementById('dm-header-av');
+  headerAv.textContent = initials(partner);
+  headerAv.className = 'main-header-avatar ' + avatarColor(partner);
+
+  document.getElementById('dm-header-name').textContent = partner;
+  document.getElementById('dm-input').placeholder = `Message ${partner}…`;
+  renderMessages(partner);
+  renderDmList();
+}
+
+function renderMessages(partner) {
+  const container = document.getElementById('dm-messages');
+  container.innerHTML = '';
+
+  const msgs = getMessages(currentUser, partner);
+
+  if (msgs.length === 0) {
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px;text-align:center;color:var(--text-muted);">
+        <div style="font-size:40px;opacity:0.2;margin-bottom:12px;">👋</div>
+        <div style="font-size:14px;color:var(--text-secondary);margin-bottom:4px;">This is the beginning of your conversation with <strong style="color:var(--text-primary);">${partner}</strong>.</div>
+        <div style="font-size:12px;">Say hello!</div>
+      </div>
+    `;
+    return;
+  }
+
+  let lastAuthor = null;
+  let lastDate = null;
+
+  msgs.forEach((msg, i) => {
+    const d = new Date(msg.ts);
+    const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    if (dateStr !== lastDate) {
+      lastDate = dateStr;
+      lastAuthor = null;
+      const div = document.createElement('div');
+      div.className = 'time-divider';
+      div.textContent = dateStr;
+      container.appendChild(div);
+    }
+
+    const isMe = msg.from === currentUser;
+    const showHeader = msg.from !== lastAuthor;
+    lastAuthor = msg.from;
+
+    const row = document.createElement('div');
+    row.className = 'msg-row';
+    if (!showHeader) row.classList.add('msg-continued');
+
+    if (showHeader) {
+      row.innerHTML = `
+        <div class="msg-avatar-col">
+          <div class="msg-avatar ${avatarColor(msg.from)}">${initials(msg.from)}</div>
+        </div>
+        <div class="msg-content">
+          <div class="msg-meta">
+            <span class="msg-author" style="color:${isMe ? 'var(--accent)' : 'var(--text-primary)'}">${msg.from}</span>
+            <span class="msg-time">${timeStr}</span>
+          </div>
+          <div class="msg-text">${escapeHtml(msg.text)}</div>
+        </div>
+      `;
+    } else {
+      row.innerHTML = `
+        <div class="msg-avatar-col" style="width:36px;"></div>
+        <div class="msg-content">
+          <div class="msg-text">${escapeHtml(msg.text)}</div>
+        </div>
+      `;
+    }
+
+    container.appendChild(row);
+  });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('dm-send').addEventListener('click', sendMessage);
+document.getElementById('dm-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+function sendMessage() {
+  const input = document.getElementById('dm-input');
+  const text = input.value.trim();
+  if (!text || !currentDmPartner) return;
+
+  const msgs = getMessages(currentUser, currentDmPartner);
+  msgs.push({ from: currentUser, text, ts: Date.now() });
+  saveMessages(currentUser, currentDmPartner, msgs);
+
+  input.value = '';
+  renderMessages(currentDmPartner);
+  renderDmList();
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════ */
+function toast(msg, type) {
+  const area = document.getElementById('toast-area');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  area.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════ */
+(function boot() {
+  const saved = getSession();
+  if (saved && getUsers()[saved]) {
+    currentUser = saved;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    initApp();
+  }
+})();
+</script>
+</body>
+</html>
