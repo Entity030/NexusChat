@@ -423,6 +423,8 @@
     flex-direction: column;
     overflow: hidden;
     background: var(--bg-main);
+    position: relative;
+    min-width: 0;
   }
 
   .main-header {
@@ -511,7 +513,7 @@
 
   .msg-row:hover { background: var(--bg-message); }
 
-  .msg-avatar-col { width: 36px; flex-shrink: 0; }
+  .msg-avatar-col { width: 36px; flex-shrink: 0; position: relative; }
 
   .msg-avatar {
     width: 36px; height: 36px;
@@ -552,9 +554,24 @@
     color: var(--text-primary);
     line-height: 1.5;
     word-break: break-word;
+    white-space: pre-wrap;
   }
 
   .msg-continued { padding-left: 4px; }
+
+  .msg-hover-time::before {
+    content: attr(data-time);
+    display: none;
+    position: absolute;
+    left: -2px; right: -2px; top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .msg-row:hover .msg-hover-time::before { display: block; }
 
   /* Timestamp divider */
   .time-divider {
@@ -605,6 +622,8 @@
     font-size: 14px;
     resize: none;
     line-height: 1.4;
+    max-height: 160px;
+    overflow-y: auto;
   }
 
   .chat-input::placeholder { color: var(--text-muted); }
@@ -912,6 +931,165 @@
   .av-pink { background: #c45380; }
   .av-amber { background: #ba7517; }
   .av-blue { background: #2775c8; }
+
+  /* ══════════════════════════════════════
+     MOBILE SIDEBAR TOGGLE
+  ══════════════════════════════════════ */
+  .mobile-menu-btn {
+    display: none;
+    position: absolute;
+    top: 12px; left: 12px;
+    z-index: 60;
+    width: 34px; height: 34px;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-channel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .mobile-menu-btn:hover { background: var(--bg-hover); }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition);
+  }
+
+  .sidebar-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ══════════════════════════════════════
+     CONFIRM MODAL
+  ══════════════════════════════════════ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 950;
+    padding: 16px;
+  }
+
+  .modal-overlay.visible { display: flex; }
+
+  .modal-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 380px;
+    max-width: 100%;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .modal-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .modal-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    color: var(--text-secondary);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .modal-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+  .modal-btn.confirm { border-color: var(--danger); color: var(--danger); }
+  .modal-btn.confirm:hover { background: rgba(232,85,85,0.1); }
+
+  /* ══════════════════════════════════════
+     RESPONSIVE / MOBILE LAYOUT
+  ══════════════════════════════════════ */
+  @media (max-width: 768px) {
+    .auth-card { padding: 28px 22px; }
+
+    .mobile-menu-btn { display: flex; }
+
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 80%;
+      max-width: 300px;
+      z-index: 501;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      box-shadow: 8px 0 32px rgba(0,0,0,0.5);
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .main-header {
+      padding: 12px 14px 12px 56px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .main-header-actions {
+      margin-left: 0;
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .main-header-name { font-size: 14px; }
+
+    #page-welcome.dm-welcome { padding-top: 64px; }
+
+    .messages-container { padding: 12px; }
+
+    .input-area { padding: 0 12px 12px; }
+
+    .panel { padding: 16px; padding-top: 8px; }
+
+    .add-friend-row { flex-direction: column; }
+    .add-friend-btn { width: 100%; }
+
+    .friend-card { flex-wrap: wrap; }
+    .friend-actions { width: 100%; justify-content: flex-end; margin-top: 8px; }
+
+    .header-btn { font-size: 12px; padding: 5px 10px; }
+    .tab { font-size: 12px; padding: 5px 10px; }
+
+    .toast-area { left: 12px; right: 12px; bottom: 12px; }
+    .toast { max-width: none; }
+
+    .modal-card { padding: 20px; }
+  }
 </style>
 </head>
 <body>
@@ -1010,8 +1188,12 @@
     </div>
   </div>
 
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
   <!-- Main Content -->
   <div class="main" id="main-content">
+
+    <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu">☰</button>
 
     <!-- Friends Page -->
     <div id="page-friends" style="display:none; flex-direction:column; height:100%;">
@@ -1046,7 +1228,7 @@
       <div class="messages-container" id="dm-messages"></div>
       <div class="input-area">
         <div class="input-wrap">
-          <input class="chat-input" id="dm-input" placeholder="Message…" type="text">
+          <textarea class="chat-input" id="dm-input" placeholder="Message…" rows="1"></textarea>
           <button class="send-btn" id="dm-send">Send</button>
         </div>
       </div>
@@ -1059,6 +1241,17 @@
       <p>Add friends and send direct messages to start chatting.</p>
     </div>
 
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="modal-btn" id="modal-cancel">Cancel</button>
+      <button class="modal-btn confirm" id="modal-confirm">Confirm</button>
+    </div>
   </div>
 </div>
 
@@ -1090,7 +1283,16 @@ function simpleHash(s) {
 
 /* ── Friend requests: [{ from, to, ts }] ── */
 function getRequests() { return getData('requests', []); }
-function saveRequests(r) { setData('requests', r); }
+function saveRequests(r) {
+  const seen = new Set();
+  const deduped = r.filter(req => {
+    const key = req.from + '\u0000' + req.to;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  setData('requests', deduped);
+}
 
 /* ── Friends: { user: [username,...] } ── */
 function getFriends() { return getData('friends', {}); }
@@ -1144,6 +1346,47 @@ function setSession(u) { sessionStorage.setItem('nexus_session', u); }
 function clearSession() { sessionStorage.removeItem('nexus_session'); }
 
 /* ═══════════════════════════════════════════════════════
+   MOBILE SIDEBAR
+═══════════════════════════════════════════════════════ */
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebar-backdrop').classList.toggle('visible');
+}
+
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('visible');
+}
+
+/* ═══════════════════════════════════════════════════════
+   CONFIRM MODAL
+═══════════════════════════════════════════════════════ */
+let modalConfirmCallback = null;
+
+function showConfirmModal(title, body, onConfirm, confirmLabel) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  document.getElementById('modal-confirm').textContent = confirmLabel || 'Confirm';
+  modalConfirmCallback = onConfirm;
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function hideConfirmModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+  modalConfirmCallback = null;
+}
+
+document.getElementById('modal-cancel').addEventListener('click', hideConfirmModal);
+document.getElementById('modal-confirm').addEventListener('click', () => {
+  const cb = modalConfirmCallback;
+  hideConfirmModal();
+  if (cb) cb();
+});
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target.id === 'modal-overlay') hideConfirmModal();
+});
+
+/* ═══════════════════════════════════════════════════════
    AUTH
 ═══════════════════════════════════════════════════════ */
 document.getElementById('go-register').addEventListener('click', () => {
@@ -1167,20 +1410,36 @@ function doLogin() {
   const users = getUsers();
   const uErr = document.getElementById('login-error');
   const pwErr = document.getElementById('login-pw-error');
+  const uInput = document.getElementById('login-username');
+  const pwInput = document.getElementById('login-password');
 
   uErr.style.display = 'none';
   pwErr.style.display = 'none';
-  document.getElementById('login-username').classList.remove('error');
-  document.getElementById('login-password').classList.remove('error');
+  uInput.classList.remove('error');
+  pwInput.classList.remove('error');
 
-  if (!users[username]) {
+  if (!username) {
+    uErr.textContent = 'Please enter your username.';
     uErr.style.display = '';
-    document.getElementById('login-username').classList.add('error');
+    uInput.classList.add('error');
+    return;
+  }
+  if (!users[username]) {
+    uErr.textContent = 'Username not found. Try signing up.';
+    uErr.style.display = '';
+    uInput.classList.add('error');
+    return;
+  }
+  if (!password) {
+    pwErr.textContent = 'Please enter your password.';
+    pwErr.style.display = '';
+    pwInput.classList.add('error');
     return;
   }
   if (users[username].passwordHash !== simpleHash(password)) {
+    pwErr.textContent = 'Incorrect password.';
     pwErr.style.display = '';
-    document.getElementById('login-password').classList.add('error');
+    pwInput.classList.add('error');
     return;
   }
   loginAs(username);
@@ -1202,7 +1461,12 @@ function doRegister() {
 
   let ok = true;
 
-  if (!username || username.length < 2 || !/^[a-z0-9_]+$/.test(username)) {
+  if (!username) {
+    uErr.textContent = 'Please enter a username.';
+    uErr.style.display = '';
+    document.getElementById('reg-username').classList.add('error');
+    ok = false;
+  } else if (username.length < 2 || !/^[a-z0-9_]+$/.test(username)) {
     uErr.textContent = 'Use 2+ letters, numbers, or underscores.';
     uErr.style.display = '';
     document.getElementById('reg-username').classList.add('error');
@@ -1214,13 +1478,25 @@ function doRegister() {
     ok = false;
   }
 
-  if (password.length < 4) {
+  if (!password) {
+    pwErr.textContent = 'Please enter a password.';
+    pwErr.style.display = '';
+    document.getElementById('reg-password').classList.add('error');
+    ok = false;
+  } else if (password.length < 4) {
+    pwErr.textContent = 'Password must be at least 4 characters.';
     pwErr.style.display = '';
     document.getElementById('reg-password').classList.add('error');
     ok = false;
   }
 
-  if (password !== confirm) {
+  if (!confirm) {
+    cErr.textContent = 'Please confirm your password.';
+    cErr.style.display = '';
+    document.getElementById('reg-confirm').classList.add('error');
+    ok = false;
+  } else if (password !== confirm) {
+    cErr.textContent = 'Passwords do not match.';
     cErr.style.display = '';
     document.getElementById('reg-confirm').classList.add('error');
     ok = false;
@@ -1245,6 +1521,7 @@ function logout() {
   clearSession();
   currentUser = null;
   currentDmPartner = null;
+  closeSidebar();
   document.getElementById('app').classList.remove('visible');
   document.getElementById('auth-screen').style.display = '';
   document.getElementById('login-username').value = '';
@@ -1285,6 +1562,8 @@ function showPage(page, partner) {
   } else {
     document.getElementById('page-welcome').style.display = 'flex';
   }
+
+  closeSidebar();
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1313,7 +1592,7 @@ function renderDmList(filter) {
       <div class="nav-avatar ${avatarColor(friend)}">${initials(friend)}<div class="status-dot"></div></div>
       <div style="min-width:0;flex:1;">
         <div class="nav-label" style="font-size:13px;font-weight:500;color:var(--text-primary)">${friend}</div>
-        ${last ? `<div class="nav-label" style="font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${last.from === currentUser ? 'You: ' : ''}${last.text}</div>` : ''}
+        ${last ? `<div class="nav-label" style="font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${last.from === currentUser ? 'You: ' : ''}${escapeHtml(last.text.replace(/\s+/g, ' ').trim())}</div>` : ''}
       </div>
     `;
     list.appendChild(div);
@@ -1464,14 +1743,26 @@ function renderAddFriend(panel) {
    FRIEND LOGIC
 ═══════════════════════════════════════════════════════ */
 function sendFriendRequest() {
-  const target = document.getElementById('af-input').value.trim().toLowerCase();
+  const input = document.getElementById('af-input');
+  const target = input.value.trim().toLowerCase();
   const status = document.getElementById('af-status');
   status.className = 'add-friend-status';
 
-  if (!target) { status.textContent = ''; return; }
+  if (!target) {
+    status.className += ' status-err';
+    status.textContent = 'Please enter a username.';
+    return;
+  }
+
+  if (!/^[a-z0-9_]{2,}$/.test(target)) {
+    status.className += ' status-err';
+    status.textContent = 'Usernames use only lowercase letters, numbers, and underscores.';
+    return;
+  }
+
   if (target === currentUser) {
     status.className += ' status-err';
-    status.textContent = "You can't add yourself.";
+    status.textContent = "You can't send a friend request to yourself.";
     return;
   }
 
@@ -1489,17 +1780,17 @@ function sendFriendRequest() {
   }
 
   const reqs = getRequests();
-  if (reqs.find(r => r.from === currentUser && r.to === target)) {
+  if (reqs.some(r => r.from === currentUser && r.to === target)) {
     status.className += ' status-err';
     status.textContent = 'Request already sent.';
     return;
   }
 
-  if (reqs.find(r => r.from === target && r.to === currentUser)) {
+  if (reqs.some(r => r.from === target && r.to === currentUser)) {
     acceptRequest(target);
     status.className += ' status-ok';
     status.textContent = `You're now friends with ${target}!`;
-    document.getElementById('af-input').value = '';
+    input.value = '';
     return;
   }
 
@@ -1508,7 +1799,7 @@ function sendFriendRequest() {
 
   status.className += ' status-ok';
   status.textContent = `Friend request sent to ${target}!`;
-  document.getElementById('af-input').value = '';
+  input.value = '';
   updateReqBadge();
 }
 
@@ -1538,16 +1829,22 @@ function cancelRequest(toUser) {
 }
 
 function confirmRemoveFriend(friend) {
-  if (!confirm(`Remove ${friend} as a friend? You will lose your DM history.`)) return;
-  removeFriendship(currentUser, friend);
-  setData('msgs_' + dmKey(currentUser, friend), []);
-  if (currentDmPartner === friend) {
-    currentDmPartner = null;
-    showPage('welcome');
-  }
-  renderDmList();
-  renderFriendsPanel();
-  toast(`${friend} removed from friends.`);
+  showConfirmModal(
+    'Remove friend?',
+    `Remove ${friend} as a friend? This will permanently delete your DM history with them and can't be undone.`,
+    () => {
+      removeFriendship(currentUser, friend);
+      setData('msgs_' + dmKey(currentUser, friend), []);
+      if (currentDmPartner === friend) {
+        currentDmPartner = null;
+        showPage('welcome');
+      }
+      renderDmList();
+      renderFriendsPanel();
+      toast(`${friend} removed from friends.`);
+    },
+    'Remove'
+  );
 }
 
 function removeFriend() {
@@ -1639,7 +1936,7 @@ function renderMessages(partner) {
       `;
     } else {
       row.innerHTML = `
-        <div class="msg-avatar-col" style="width:36px;"></div>
+        <div class="msg-avatar-col msg-hover-time" data-time="${timeStr}"></div>
         <div class="msg-content">
           <div class="msg-text">${escapeHtml(msg.text)}</div>
         </div>
@@ -1660,6 +1957,10 @@ document.getElementById('dm-send').addEventListener('click', sendMessage);
 document.getElementById('dm-input').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
+document.getElementById('dm-input').addEventListener('input', e => {
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
+});
 
 function sendMessage() {
   const input = document.getElementById('dm-input');
@@ -1671,8 +1972,10 @@ function sendMessage() {
   saveMessages(currentUser, currentDmPartner, msgs);
 
   input.value = '';
+  input.style.height = 'auto';
   renderMessages(currentDmPartner);
   renderDmList();
+  input.focus();
 }
 
 /* ═══════════════════════════════════════════════════════
