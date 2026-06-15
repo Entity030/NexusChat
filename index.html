@@ -48,9 +48,15 @@
   }
 
   /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 4px; }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) transparent;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+  ::-webkit-scrollbar-corner { background: transparent; }
 
   /* ══════════════════════════════════════
      AUTH SCREEN
@@ -509,9 +515,93 @@
     padding: 3px 6px;
     border-radius: var(--radius-sm);
     transition: background var(--transition);
+    position: relative;
   }
 
   .msg-row:hover { background: var(--bg-message); }
+
+  .msg-actions {
+    position: absolute;
+    top: -14px;
+    right: 8px;
+    display: none;
+    align-items: center;
+    gap: 2px;
+    background: var(--bg-channel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  .msg-row:hover .msg-actions { display: flex; }
+
+  .msg-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 7px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .msg-action-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  
+  /* delete button hover style: danger tone */
+  .msg-delete-btn:hover { 
+    color: var(--danger) !important; 
+    background: rgba(232,85,85,0.1);
+  }
+
+  .edited-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: 5px;
+    font-weight: 400;
+  }
+
+  /* Inline message editing */
+  .msg-edit-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .msg-edit-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    outline: none;
+    resize: none;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  .msg-edit-actions {
+    display: flex;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .msg-edit-actions span {
+    cursor: pointer;
+    transition: color var(--transition);
+  }
+
+  .msg-edit-actions span:hover { color: var(--text-primary); }
+
+  .msg-edit-actions .msg-edit-save:hover { color: var(--accent); }
+  .msg-edit-actions .msg-edit-cancel:hover { color: var(--danger); }
 
   .msg-avatar-col { width: 36px; flex-shrink: 0; position: relative; }
 
@@ -592,6 +682,46 @@
     background: var(--border);
   }
 
+  /* Typing indicator */
+  .typing-indicator {
+    height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 20px;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: height var(--transition), padding var(--transition);
+  }
+
+  .typing-indicator.visible {
+    height: 26px;
+    padding: 4px 20px;
+  }
+
+  .typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .typing-dots span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: typingBounce 1.2s infinite ease-in-out;
+  }
+
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-3px); opacity: 1; }
+  }
+
   /* Chat input */
   .input-area {
     padding: 0 20px 20px;
@@ -644,6 +774,35 @@
 
   .send-btn:hover { background: #7a72ff; }
   .send-btn:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+  /* Loading spinner */
+  .btn-spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: btnSpin 0.6s linear infinite;
+    vertical-align: -2px;
+  }
+
+  .action-btn .btn-spinner,
+  .add-friend-btn .btn-spinner,
+  .modal-btn .btn-spinner {
+    border-color: rgba(108,99,255,0.25);
+    border-top-color: var(--accent);
+  }
+
+  @keyframes btnSpin { to { transform: rotate(360deg); } }
+
+  .send-btn.loading,
+  .action-btn.loading,
+  .add-friend-btn.loading,
+  .modal-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+    cursor: default;
+  }
 
   /* ══════════════════════════════════════
      FRIENDS / REQUESTS PANEL
@@ -1028,6 +1187,7 @@
   }
 
   .modal-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .modal-btn.confirm { border-color: var(--danger); color: var(--danger); }
   .modal-btn.confirm:hover { background: rgba(232,85,85,0.1); }
@@ -1226,6 +1386,10 @@
         </div>
       </div>
       <div class="messages-container" id="dm-messages"></div>
+      <div class="typing-indicator" id="typing-indicator">
+        <span id="typing-name"></span>
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>
       <div class="input-area">
         <div class="input-wrap">
           <textarea class="chat-input" id="dm-input" placeholder="Message…" rows="1"></textarea>
@@ -1340,6 +1504,9 @@ function initials(name) { return name.slice(0,2).toUpperCase(); }
 let currentUser = null;
 let currentDmPartner = null;
 let currentFriendTab = 'all';
+let editingIndex = null;
+let typingShowTimer = null;
+let typingHideTimer = null;
 
 function getSession() { return sessionStorage.getItem('nexus_session'); }
 function setSession(u) { sessionStorage.setItem('nexus_session', u); }
@@ -1379,8 +1546,17 @@ function hideConfirmModal() {
 document.getElementById('modal-cancel').addEventListener('click', hideConfirmModal);
 document.getElementById('modal-confirm').addEventListener('click', () => {
   const cb = modalConfirmCallback;
-  hideConfirmModal();
-  if (cb) cb();
+  const confirmBtn = document.getElementById('modal-confirm');
+  const cancelBtn = document.getElementById('modal-cancel');
+  if (!cb) { hideConfirmModal(); return; }
+  setBtnLoading(confirmBtn, true);
+  cancelBtn.disabled = true;
+  setTimeout(() => {
+    setBtnLoading(confirmBtn, false);
+    cancelBtn.disabled = false;
+    hideConfirmModal();
+    cb();
+  }, 400);
 });
 document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target.id === 'modal-overlay') hideConfirmModal();
@@ -1538,7 +1714,13 @@ function initApp() {
   document.getElementById('footer-name').textContent = currentUser;
   renderDmList();
   updateReqBadge();
-  showPage('welcome');
+
+  const lastDm = getData('lastDm_' + currentUser, null);
+  if (lastDm && areFriends(currentUser, lastDm)) {
+    showPage('dm', lastDm);
+  } else {
+    showPage('welcome');
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1548,6 +1730,8 @@ function showPage(page, partner) {
   document.getElementById('page-friends').style.display = 'none';
   document.getElementById('page-dm').style.display = 'none';
   document.getElementById('page-welcome').style.display = 'none';
+  clearTypingTimers();
+  hideTypingIndicator();
 
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
@@ -1558,6 +1742,7 @@ function showPage(page, partner) {
   } else if (page === 'dm' && partner) {
     document.getElementById('page-dm').style.display = 'flex';
     currentDmPartner = partner;
+    setData('lastDm_' + currentUser, partner);
     openDm(partner);
   } else {
     document.getElementById('page-welcome').style.display = 'flex';
@@ -1688,8 +1873,8 @@ function renderPending(panel) {
           <div class="friend-sub" style="color:var(--warning);">Incoming friend request</div>
         </div>
         <div class="friend-actions">
-          <button class="action-btn accept" onclick="acceptRequest('${r.from}')">Accept</button>
-          <button class="action-btn decline" onclick="declineRequest('${r.from}')">Decline</button>
+          <button class="action-btn accept" onclick="acceptRequest('${r.from}', this)">Accept</button>
+          <button class="action-btn decline" onclick="declineRequest('${r.from}', this)">Decline</button>
         </div>
       `;
       panel.appendChild(card);
@@ -1713,7 +1898,7 @@ function renderPending(panel) {
           <div class="friend-sub" style="color:var(--text-muted);">Request pending…</div>
         </div>
         <div class="friend-actions">
-          <button class="action-btn decline" onclick="cancelRequest('${r.to}')">Cancel</button>
+          <button class="action-btn decline" onclick="cancelRequest('${r.to}', this)">Cancel</button>
         </div>
       `;
       panel.appendChild(card);
@@ -1729,20 +1914,37 @@ function renderAddFriend(panel) {
       <p>Enter an exact username to send a request.</p>
       <div class="add-friend-row">
         <input class="add-friend-input" id="af-input" placeholder="Username" type="text" autocomplete="off">
-        <button class="add-friend-btn" onclick="sendFriendRequest()">Send Request</button>
+        <button class="add-friend-btn" id="af-send-btn" onclick="sendFriendRequest(this)">Send Request</button>
       </div>
       <div class="add-friend-status" id="af-status"></div>
     </div>
   `;
   document.getElementById('af-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') sendFriendRequest();
+    if (e.key === 'Enter') sendFriendRequest(document.getElementById('af-send-btn'));
   });
 }
 
 /* ═══════════════════════════════════════════════════════
    FRIEND LOGIC
 ═══════════════════════════════════════════════════════ */
-function sendFriendRequest() {
+function setBtnLoading(btn, loading) {
+  if (!btn) return;
+  if (loading) {
+    btn.dataset.originalHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="btn-spinner"></span>';
+    btn.classList.add('loading');
+    btn.disabled = true;
+  } else {
+    if (btn.dataset.originalHtml !== undefined) {
+      btn.innerHTML = btn.dataset.originalHtml;
+      delete btn.dataset.originalHtml;
+    }
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+function sendFriendRequest(btn) {
   const input = document.getElementById('af-input');
   const target = input.value.trim().toLowerCase();
   const status = document.getElementById('af-status');
@@ -1786,46 +1988,60 @@ function sendFriendRequest() {
     return;
   }
 
-  if (reqs.some(r => r.from === target && r.to === currentUser)) {
-    acceptRequest(target);
+  setBtnLoading(btn, true);
+  setTimeout(() => {
+    setBtnLoading(btn, false);
+
+    if (reqs.some(r => r.from === target && r.to === currentUser)) {
+      acceptRequest(target);
+      status.className += ' status-ok';
+      status.textContent = `You're now friends with ${target}!`;
+      input.value = '';
+      return;
+    }
+
+    reqs.push({ from: currentUser, to: target, ts: Date.now() });
+    saveRequests(reqs);
+
     status.className += ' status-ok';
-    status.textContent = `You're now friends with ${target}!`;
+    status.textContent = `Friend request sent to ${target}!`;
     input.value = '';
-    return;
-  }
-
-  reqs.push({ from: currentUser, to: target, ts: Date.now() });
-  saveRequests(reqs);
-
-  status.className += ' status-ok';
-  status.textContent = `Friend request sent to ${target}!`;
-  input.value = '';
-  updateReqBadge();
+    updateReqBadge();
+  }, 400);
 }
 
-function acceptRequest(fromUser) {
-  const reqs = getRequests().filter(r => !(r.from === fromUser && r.to === currentUser));
-  saveRequests(reqs);
-  addFriendship(currentUser, fromUser);
-  renderDmList();
-  updateReqBadge();
-  renderFriendsPanel();
-  toast(`You and ${fromUser} are now friends! 🎉`, 'success');
+function acceptRequest(fromUser, btn) {
+  if (btn) setBtnLoading(btn, true);
+  setTimeout(() => {
+    const reqs = getRequests().filter(r => !(r.from === fromUser && r.to === currentUser));
+    saveRequests(reqs);
+    addFriendship(currentUser, fromUser);
+    renderDmList();
+    updateReqBadge();
+    renderFriendsPanel();
+    toast(`You and ${fromUser} are now friends! 🎉`, 'success');
+  }, 400);
 }
 
-function declineRequest(fromUser) {
-  const reqs = getRequests().filter(r => !(r.from === fromUser && r.to === currentUser));
-  saveRequests(reqs);
-  updateReqBadge();
-  renderFriendsPanel();
-  toast(`Declined request from ${fromUser}.`);
+function declineRequest(fromUser, btn) {
+  if (btn) setBtnLoading(btn, true);
+  setTimeout(() => {
+    const reqs = getRequests().filter(r => !(r.from === fromUser && r.to === currentUser));
+    saveRequests(reqs);
+    updateReqBadge();
+    renderFriendsPanel();
+    toast(`Declined request from ${fromUser}.`);
+  }, 400);
 }
 
-function cancelRequest(toUser) {
-  const reqs = getRequests().filter(r => !(r.from === currentUser && r.to === toUser));
-  saveRequests(reqs);
-  renderFriendsPanel();
-  toast('Request cancelled.');
+function cancelRequest(toUser, btn) {
+  if (btn) setBtnLoading(btn, true);
+  setTimeout(() => {
+    const reqs = getRequests().filter(r => !(r.from === currentUser && r.to === toUser));
+    saveRequests(reqs);
+    renderFriendsPanel();
+    toast('Request cancelled.');
+  }, 400);
 }
 
 function confirmRemoveFriend(friend) {
@@ -1838,6 +2054,9 @@ function confirmRemoveFriend(friend) {
       if (currentDmPartner === friend) {
         currentDmPartner = null;
         showPage('welcome');
+      }
+      if (getData('lastDm_' + currentUser, null) === friend) {
+        setData('lastDm_' + currentUser, null);
       }
       renderDmList();
       renderFriendsPanel();
@@ -1875,12 +2094,47 @@ function openDm(partner) {
 
   document.getElementById('dm-header-name').textContent = partner;
   document.getElementById('dm-input').placeholder = `Message ${partner}…`;
+  editingIndex = null;
+  hideTypingIndicator();
   renderMessages(partner);
   renderDmList();
 }
 
+/* ═══════════════════════════════════════════════════════
+   TYPING INDICATOR (client-side simulation)
+═══════════════════════════════════════════════════════ */
+function showTypingIndicator(partner) {
+  const ind = document.getElementById('typing-indicator');
+  document.getElementById('typing-name').textContent = `${partner} is typing`;
+  ind.classList.add('visible');
+}
+
+function hideTypingIndicator() {
+  document.getElementById('typing-indicator').classList.remove('visible');
+}
+
+function clearTypingTimers() {
+  clearTimeout(typingShowTimer);
+  clearTimeout(typingHideTimer);
+  typingShowTimer = null;
+  typingHideTimer = null;
+}
+
+function simulateTypingReply(partner) {
+  clearTypingTimers();
+  typingShowTimer = setTimeout(() => {
+    if (currentDmPartner !== partner) return;
+    showTypingIndicator(partner);
+    typingHideTimer = setTimeout(() => {
+      if (currentDmPartner !== partner) return;
+      hideTypingIndicator();
+    }, 1600 + Math.random() * 1800);
+  }, 600 + Math.random() * 500);
+}
+
 function renderMessages(partner) {
   const container = document.getElementById('dm-messages');
+  const prevScroll = container.scrollTop;
   container.innerHTML = '';
 
   const msgs = getMessages(currentUser, partner);
@@ -1921,6 +2175,34 @@ function renderMessages(partner) {
     row.className = 'msg-row';
     if (!showHeader) row.classList.add('msg-continued');
 
+    const isEditing = editingIndex === i;
+    const editedLabel = msg.edited ? '<span class="edited-label">(edited)</span>' : '';
+
+    const bodyHtml = isEditing
+      ? `
+        <div class="msg-edit-wrap">
+          <textarea class="msg-edit-input" id="edit-input-${i}" onkeydown="handleEditKeydown(event, ${i})">${escapeHtml(msg.text)}</textarea>
+          <div class="msg-edit-actions">
+            <span class="msg-edit-save" onclick="saveEditMessage(${i})">save</span>
+            <span>·</span>
+            <span class="msg-edit-cancel" onclick="cancelEditMessage()">cancel</span>
+            <span style="margin-left:4px;">escape to cancel, enter to save</span>
+          </div>
+        </div>
+      `
+      : `<div class="msg-text">${escapeHtml(msg.text)}${editedLabel}</div>`;
+
+    // NEW: actions now include both edit and delete for own messages when not editing
+    let actionsHtml = '';
+    if (isMe && !isEditing) {
+      actionsHtml = `
+        <div class="msg-actions">
+          <button class="msg-action-btn" title="Edit message" onclick="startEditMessage(${i})">✏️</button>
+          <button class="msg-action-btn msg-delete-btn" title="Delete message" onclick="deleteMessage(${i})">🗑️</button>
+        </div>
+      `;
+    }
+
     if (showHeader) {
       row.innerHTML = `
         <div class="msg-avatar-col">
@@ -1931,22 +2213,110 @@ function renderMessages(partner) {
             <span class="msg-author" style="color:${isMe ? 'var(--accent)' : 'var(--text-primary)'}">${msg.from}</span>
             <span class="msg-time">${timeStr}</span>
           </div>
-          <div class="msg-text">${escapeHtml(msg.text)}</div>
+          ${bodyHtml}
         </div>
+        ${actionsHtml}
       `;
     } else {
       row.innerHTML = `
         <div class="msg-avatar-col msg-hover-time" data-time="${timeStr}"></div>
         <div class="msg-content">
-          <div class="msg-text">${escapeHtml(msg.text)}</div>
+          ${bodyHtml}
         </div>
+        ${actionsHtml}
       `;
     }
 
     container.appendChild(row);
   });
 
-  container.scrollTop = container.scrollHeight;
+  if (editingIndex !== null) {
+    container.scrollTop = prevScroll;
+    const ta = document.getElementById('edit-input-' + editingIndex);
+    if (ta) {
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
+      ta.addEventListener('input', () => {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
+      });
+    }
+  } else {
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MESSAGE EDITING & DELETION
+═══════════════════════════════════════════════════════ */
+function startEditMessage(index) {
+  editingIndex = index;
+  renderMessages(currentDmPartner);
+}
+
+function cancelEditMessage() {
+  editingIndex = null;
+  renderMessages(currentDmPartner);
+}
+
+function saveEditMessage(index) {
+  const textarea = document.getElementById('edit-input-' + index);
+  if (!textarea) return;
+  const newText = textarea.value.trim();
+  if (!newText) {
+    cancelEditMessage();
+    return;
+  }
+
+  const msgs = getMessages(currentUser, currentDmPartner);
+  if (msgs[index] && msgs[index].text !== newText) {
+    msgs[index].text = newText;
+    msgs[index].edited = true;
+    saveMessages(currentUser, currentDmPartner, msgs);
+  }
+
+  editingIndex = null;
+  renderMessages(currentDmPartner);
+  renderDmList();
+}
+
+function deleteMessage(index) {
+  if (!currentDmPartner) return;
+  const partner = currentDmPartner;
+
+  showConfirmModal(
+    "Delete message",
+    "Are you sure you want to delete this message? This cannot be undone.",
+    () => {
+      let msgs = getMessages(currentUser, partner);
+      if (!msgs[index] || msgs[index].from !== currentUser) {
+        toast("Message already removed or cannot be deleted.", "error");
+        return;
+      }
+      msgs.splice(index, 1);
+      saveMessages(currentUser, partner, msgs);
+      // Cancel any ongoing editing to avoid UI inconsistency
+      if (editingIndex !== null) {
+        cancelEditMessage();
+      }
+      renderMessages(partner);
+      renderDmList();
+      toast("Message deleted.");
+    },
+    "Delete"
+  );
+}
+
+function handleEditKeydown(e, index) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    saveEditMessage(index);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    cancelEditMessage();
+  }
 }
 
 function escapeHtml(str) {
@@ -1967,15 +2337,32 @@ function sendMessage() {
   const text = input.value.trim();
   if (!text || !currentDmPartner) return;
 
-  const msgs = getMessages(currentUser, currentDmPartner);
-  msgs.push({ from: currentUser, text, ts: Date.now() });
-  saveMessages(currentUser, currentDmPartner, msgs);
+  const partner = currentDmPartner;
+  const sendBtn = document.getElementById('dm-send');
+  const originalLabel = sendBtn.textContent;
+  sendBtn.classList.add('loading');
+  sendBtn.innerHTML = '<span class="btn-spinner"></span>';
+  sendBtn.disabled = true;
 
   input.value = '';
   input.style.height = 'auto';
-  renderMessages(currentDmPartner);
-  renderDmList();
-  input.focus();
+
+  setTimeout(() => {
+    const msgs = getMessages(currentUser, partner);
+    msgs.push({ from: currentUser, text, ts: Date.now(), edited: false });
+    saveMessages(currentUser, partner, msgs);
+
+    sendBtn.classList.remove('loading');
+    sendBtn.textContent = originalLabel;
+    sendBtn.disabled = false;
+
+    if (currentDmPartner === partner) {
+      renderMessages(partner);
+    }
+    renderDmList();
+    input.focus();
+    simulateTypingReply(partner);
+  }, 300);
 }
 
 /* ═══════════════════════════════════════════════════════
